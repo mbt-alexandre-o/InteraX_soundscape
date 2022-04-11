@@ -113,7 +113,7 @@ class SoundScapeSurveyFrame(ttk.Frame):
         self.relax = Eva(self,"How relaxing did you find this soundscape?","Not relaxing at all","Very relaxing")
         self.relax.place(relx=0.2,rely=0.2,relwidth=0.6)
 
-        self.ennui = Eva(self,"How boring did you find this soundscape?","Boring","Interesting")
+        self.ennui = Eva(self,"How interesting did you find this soundscape?","Boring","Very interesting")
         self.ennui.place(relx=0.2,rely=0.3,relwidth=0.6)
 
         self.question_1 = Question(self,"Could you identify the different sounds composing the soundscape ? If so, could you tell us ?",number_row=5)
@@ -150,7 +150,7 @@ class InfoFrame(ttk.Frame):
 
         self.app = app
 
-        label = ttk.Label(self,anchor=tk.CENTER,text="But first, we would like to know some information about you.")
+        label = ttk.Label(self,anchor=tk.CENTER,text="But first, we would like to know some information about you. These are the only personal data that will be stored.")
         label.place(relx = 0.2,rely=0.2,relwidth=0.6,relheight=0.1)
 
         self.age_question = IntQuestion(self,"What's your age?",0,99,18)
