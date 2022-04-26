@@ -71,7 +71,7 @@ class Question(ttk.Frame):
 
 class Eva(ttk.Frame):
 
-    def __init__(self, frame, top_text, left_text, right_text):
+    def __init__(self, frame, top_text, left_text, right_text,command_ = None,from_ = 0, to_ = 100, set_ = 50):
         super().__init__(frame)
 
         self.columnconfigure(0, weight=1)
@@ -87,8 +87,8 @@ class Eva(ttk.Frame):
         right_label = ttk.Label(self,anchor=tk.E,text=right_text)
         right_label.grid(row=1,column=2,sticky=tk.E)
 
-        self.slider = ttk.Scale(self,from_=0,to=100,orient='horizontal')
-        self.slider.set(50)
+        self.slider = ttk.Scale(self,from_=from_,to=to_,orient='horizontal',command=command_)
+        self.slider.set(set_)
         self.slider.grid(row=2,column=0,sticky=tk.EW,columnspan=3)
 
     def get(self):
@@ -217,6 +217,165 @@ class FirstFrame(ttk.Frame):
         self.pack_forget()
         self.app.next_frame()
 
+class SoundscapeVolumeFrame(ttk.Frame):
+
+    def __init__(self, app,file):
+        super().__init__(app)
+
+        self.file = file
+        self.thread = Thread(target=self.play_wav)
+        self.stop_thread = False
+        self.app = app
+        self.volume_1 = 0.0
+        self.volume_2 = 0.0
+        self.volume_3 = 0.0
+
+        self.volume_scale_1 = Eva(
+            self,
+            "Please, select the volume of the sound in order to have a good experience.",
+            "Low",
+            "High",
+            to_= 1.0,
+            set_= 0.5,
+            command_=self.update_volume)
+        self.volume_scale_1.place(relx=0.2,rely=0.3,relwidth=0.6)
+
+        self.volume_scale_2 = Eva(
+            self,
+            "Please, select the volume of the sound in order to have a good experience.",
+            "Low",
+            "High",
+            to_= 1.0,
+            set_= 0.5,
+            command_=self.update_volume)
+        self.volume_scale_2.place(relx=0.2,rely=0.4,relwidth=0.6)
+
+        self.volume_scale_3 = Eva(
+            self,
+            "Please, select the volume of the sound in order to have a good experience.",
+            "Low",
+            "High",
+            to_= 1.0,
+            set_= 0.5,
+            command_=self.update_volume)
+        self.volume_scale_3.place(relx=0.2,rely=0.5,relwidth=0.6)
+
+        self.stop_button = ttk.Button(self,text="Save volume",command=self.stop)
+        self.stop_button.place(relx=0.65,rely=0.85,relwidth=0.3,relheight=0.1)
+
+    def update_volume(self,event):
+        self.volume_1 = self.volume_scale_1.get()
+        self.volume_2 = self.volume_scale_2.get()
+        self.volume_3 = self.volume_scale_3.get()
+
+    def play_wav(self):
+
+        def get_data(wf,volume):
+            data = wf.readframes(CHUNK)
+            decodeddata = numpy.fromstring(data, numpy.int16)
+            newdata = (decodeddata*0.5*volume).astype(numpy.int16)
+            return newdata.tostring()
+
+        wf = wave.open(self.file, 'rb')
+
+        p = pyaudio.PyAudio()
+        stream = p.open(format=p.get_format_from_width(wf.getsampwidth()),
+                    channels=wf.getnchannels(),
+                    rate=wf.getframerate(),
+                    output=True)
+
+        data = get_data(wf)
+
+        while data != b'' and not self.stop_thread:
+            stream.write(data)
+            data = get_data(wf)
+
+        stream.stop_stream()
+        stream.close()
+        p.terminate()
+
+    def begin(self):
+        self.place(x=0,rely=0,relwidth=1.0,relheight=1.0)
+        self.thread.start()
+
+    def stop(self):
+        if self.thread.is_alive():
+            self.stop_thread = True
+            self.thread.join()
+        saved_json["volume"]=self.volume
+        saved_json["volume_end"]=time()-start_time
+        save_json()
+        self.pack_forget()
+        self.app.next_frame()
+
+class VolumeFrame(ttk.Frame):
+
+    def __init__(self, app,file):
+        super().__init__(app)
+
+        self.file = file
+        self.thread = Thread(target=self.play_wav)
+        self.stop_thread = False
+        self.app = app
+        self.volume = 0.0
+
+        self.volume_scale = Eva(
+            self,
+            "Please, select the volume of the sound in order to have a good experience.",
+            "Low",
+            "High",
+            to_= 1.0,
+            set_= 0.0,
+            command_=self.update_volume)
+        self.volume_scale.place(relx=0.2,rely=0.3,relwidth=0.6)
+
+        self.stop_button = ttk.Button(self,text="Save volume",command=self.stop)
+        self.stop_button.place(relx=0.65,rely=0.85,relwidth=0.3,relheight=0.1)
+
+    def update_volume(self,event):
+        self.volume = self.volume_scale.get()
+
+    def play_wav(self):
+
+        def get_data(wf,volume):
+            data = wf.readframes(CHUNK)
+            decodeddata = numpy.fromstring(data, numpy.int16)
+            newdata = (decodeddata*0.5*volume).astype(numpy.int16)
+            return newdata.tostring()
+
+        wf = wave.open(self.file, 'rb')
+
+        p = pyaudio.PyAudio()
+        stream = p.open(format=p.get_format_from_width(wf.getsampwidth()),
+                    channels=wf.getnchannels(),
+                    rate=wf.getframerate(),
+                    output=True)
+
+        data = get_data(wf,self.volume)
+
+        while data != b'' and not self.stop_thread:
+            stream.write(data)
+            data = get_data(wf,self.volume)
+
+        stream.stop_stream()
+        stream.close()
+        p.terminate()
+
+    def begin(self):
+        self.place(x=0,rely=0,relwidth=1.0,relheight=1.0)
+        self.thread.start()
+
+    def stop(self):
+        if self.thread.is_alive():
+            self.stop_thread = True
+            self.thread.join()
+        saved_json["volume"]=self.volume
+        self.app.volume = self.volume
+        saved_json["volume_end"]=time()-start_time
+        save_json()
+        self.pack_forget()
+        self.app.next_frame()
+
 class SoundFrame(ttk.Frame):
 
     def __init__(self, app,file):
@@ -280,11 +439,16 @@ class App(tk.Tk):
         self.style = ttk.Style(self)
         self.style.theme_use("clam")
 
+        # Sounds
+
+        self.volume = 0.0
+
         # Frame
 
         self.frame_index = 0
         self.frames = [
             FirstFrame(self),
+            VolumeFrame(self,file = sounds_file[0]),
             InfoFrame(self),
             SoundFrame(self,file = sounds_file[0]),
             SoundScapeSurveyFrame(self,file = sounds_file[0]),
