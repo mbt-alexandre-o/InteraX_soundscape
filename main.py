@@ -219,10 +219,10 @@ class FirstFrame(ttk.Frame):
 
 class SoundscapeVolumeFrame(ttk.Frame):
 
-    def __init__(self, app,file):
+    def __init__(self, app,dir):
         super().__init__(app)
 
-        self.file = file
+        self.dir = dir
         self.thread = Thread(target=self.play_wav)
         self.stop_thread = False
         self.app = app
@@ -270,25 +270,35 @@ class SoundscapeVolumeFrame(ttk.Frame):
 
     def play_wav(self):
 
-        def get_data(wf,volume):
-            data = wf.readframes(CHUNK)
-            decodeddata = numpy.fromstring(data, numpy.int16)
-            newdata = (decodeddata*0.5*volume).astype(numpy.int16)
+        def get_data(wfs):
+            data0 = wfs[0].readframes(CHUNK)
+            data1 = wfs[1].readframes(CHUNK)
+            data2 = wfs[2].readframes(CHUNK)
+            decodeddata0 = numpy.fromstring(data0, numpy.int16)
+            decodeddata1 = numpy.fromstring(data1, numpy.int16)
+            decodeddata2 = numpy.fromstring(data2, numpy.int16)
+            newdata = (
+                (decodeddata0*self.volume_1)*0.33+(decodeddata1*self.volume_2)*0.33+(decodeddata2*self.volume_3)*0.33
+                ).astype(numpy.int16)
             return newdata.tostring()
 
-        wf = wave.open(self.file, 'rb')
+        wf0 = wave.open(self.dir+"gastric_mod.wav", 'rb')
+        wf1 = wave.open(self.dir+"resp_mod.wav", 'rb')
+        wf2 = wave.open(self.dir+"cardiac_mod.wav", 'rb')
+
+        wfs = [wf0,wf1,wf2]
 
         p = pyaudio.PyAudio()
-        stream = p.open(format=p.get_format_from_width(wf.getsampwidth()),
-                    channels=wf.getnchannels(),
-                    rate=wf.getframerate(),
+        stream = p.open(format=p.get_format_from_width(wf0.getsampwidth()),
+                    channels=wf0.getnchannels(),
+                    rate=wf0.getframerate(),
                     output=True)
 
-        data = get_data(wf)
+        data = get_data(wfs)
 
         while data != b'' and not self.stop_thread:
             stream.write(data)
-            data = get_data(wf)
+            data = get_data(wfs)
 
         stream.stop_stream()
         stream.close()
@@ -302,9 +312,9 @@ class SoundscapeVolumeFrame(ttk.Frame):
         if self.thread.is_alive():
             self.stop_thread = True
             self.thread.join()
-        saved_json["volume"]=self.volume
-        saved_json["volume_end"]=time()-start_time
-        save_json()
+        #saved_json["volume"]=self.volume
+        #saved_json["volume_end"]=time()-start_time
+        #save_json()
         self.pack_forget()
         self.app.next_frame()
 
@@ -448,7 +458,7 @@ class App(tk.Tk):
         self.frame_index = 0
         self.frames = [
             FirstFrame(self),
-            VolumeFrame(self,file = sounds_file[0]),
+            SoundscapeVolumeFrame(self,dir = "sounds/ambiance_1/"),
             InfoFrame(self),
             SoundFrame(self,file = sounds_file[0]),
             SoundScapeSurveyFrame(self,file = sounds_file[0]),
