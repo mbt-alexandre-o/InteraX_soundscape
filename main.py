@@ -7,12 +7,13 @@ import numpy
 import pyaudio
 from time import ctime,time
 import random
+import os
 
 
 sounds_file = [
-    "sounds/ambiance_grotte.wav",
-    "sounds/ambiance_nature.wav",
-    "sounds/ambiance_plage.wav"
+    "sounds/ambiance_jardin/",
+    "sounds/ambiance_nature/",
+    "sounds/ambiance_plage/"
 ]
 
 random.shuffle(sounds_file)
@@ -23,6 +24,8 @@ saved_json = {}
 
 def save_json():
     json_object = json.dumps(saved_json, indent = 0)
+    if not os.path.exists("results"):
+        os.mkdir("results")
     with open("results/"+start_ctime+"_InteraX_test.json", "w") as outfile:
         outfile.write(json_object)
 
@@ -105,7 +108,7 @@ class SoundScapeSurveyFrame(ttk.Frame):
             next_string = "Next soundscape"
 
         self.app = app
-        self.file = file.replace(".wav","")
+        self.file = file.replace("sounds/","").replace("/","")
 
         self.appreciation = Eva(self,"How pleasant did you find this soundscape ?","Unpleasant","Very pleasant")
         self.appreciation.place(relx=0.2,rely=0.1,relwidth=0.6)
@@ -229,34 +232,32 @@ class SoundscapeVolumeFrame(ttk.Frame):
         self.volume_1 = 0.0
         self.volume_2 = 0.0
         self.volume_3 = 0.0
+        info = json.load(open(dir+'info.json'))
 
         self.volume_scale_1 = Eva(
             self,
-            "Please, select the volume of the sound in order to have a good experience.",
+            f"Please, select the volume of the {info['gastric']} in order to have a good experience.",
             "Low",
             "High",
             to_= 1.0,
-            set_= 0.5,
             command_=self.update_volume)
         self.volume_scale_1.place(relx=0.2,rely=0.3,relwidth=0.6)
 
         self.volume_scale_2 = Eva(
             self,
-            "Please, select the volume of the sound in order to have a good experience.",
+            f"Please, select the volume of the {info['resp']} in order to have a good experience.",
             "Low",
             "High",
             to_= 1.0,
-            set_= 0.5,
             command_=self.update_volume)
         self.volume_scale_2.place(relx=0.2,rely=0.4,relwidth=0.6)
 
         self.volume_scale_3 = Eva(
             self,
-            "Please, select the volume of the sound in order to have a good experience.",
+            f"Please, select the volume of the {info['cardiac']} in order to have a good experience.",
             "Low",
             "High",
             to_= 1.0,
-            set_= 0.5,
             command_=self.update_volume)
         self.volume_scale_3.place(relx=0.2,rely=0.5,relwidth=0.6)
 
@@ -277,9 +278,9 @@ class SoundscapeVolumeFrame(ttk.Frame):
             decodeddata0 = numpy.fromstring(data0, numpy.int16)
             decodeddata1 = numpy.fromstring(data1, numpy.int16)
             decodeddata2 = numpy.fromstring(data2, numpy.int16)
-            newdata = (
+            newdata = ((
                 (decodeddata0*self.volume_1)*0.33+(decodeddata1*self.volume_2)*0.33+(decodeddata2*self.volume_3)*0.33
-                ).astype(numpy.int16)
+                )*self.app.volume).astype(numpy.int16)
             return newdata.tostring()
 
         wf0 = wave.open(self.dir+"gastric_mod.wav", 'rb')
@@ -312,9 +313,12 @@ class SoundscapeVolumeFrame(ttk.Frame):
         if self.thread.is_alive():
             self.stop_thread = True
             self.thread.join()
-        #saved_json["volume"]=self.volume
-        #saved_json["volume_end"]=time()-start_time
-        #save_json()
+        name = self.dir.replace("sounds/","").replace("/","")+"_"
+        saved_json[name+"gastric_volume"]=self.volume_1
+        saved_json[name+"resp_volume"]=self.volume_2
+        saved_json[name+"cardiac_volume"]=self.volume_3
+        saved_json[name+"soundscape_end"]=time()-start_time
+        save_json()
         self.pack_forget()
         self.app.next_frame()
 
@@ -458,14 +462,17 @@ class App(tk.Tk):
         self.frame_index = 0
         self.frames = [
             FirstFrame(self),
-            SoundscapeVolumeFrame(self,dir = "sounds/ambiance_1/"),
+            VolumeFrame(self,file = "sounds/example.wav"),
             InfoFrame(self),
-            SoundFrame(self,file = sounds_file[0]),
+            SoundFrame(self,file = sounds_file[0]+"all_mod.wav"),
             SoundScapeSurveyFrame(self,file = sounds_file[0]),
-            SoundFrame(self,file = sounds_file[1]),
+            SoundscapeVolumeFrame(self,dir = sounds_file[0]),
+            SoundFrame(self,file = sounds_file[1]+"all_mod.wav"),
             SoundScapeSurveyFrame(self,file = sounds_file[1]),
-            SoundFrame(self,file = sounds_file[2]),
+            SoundscapeVolumeFrame(self,dir = sounds_file[1]),
+            SoundFrame(self,file = sounds_file[2]+"all_mod.wav"),
             SoundScapeSurveyFrame(self,file = sounds_file[2]),
+            SoundscapeVolumeFrame(self,dir = sounds_file[2]),
             LastFrame(self)
         ]
         self.frames[0].begin()
