@@ -102,10 +102,7 @@ class SoundScapeSurveyFrame(ttk.Frame):
     def __init__(self, app, file):
         super().__init__(app)
 
-        if file == sounds_file[2]:
-            next_string = "Next"
-        else:
-            next_string = "Next soundscape"
+        next_string = "Next"
 
         self.app = app
         self.file = file.replace("sounds/","").replace("/","")
