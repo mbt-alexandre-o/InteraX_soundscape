@@ -11,9 +11,10 @@ import os
 
 
 sounds_file = [
-    "sounds/ambiance_jardin/",
-    "sounds/ambiance_nature/",
-    "sounds/ambiance_plage/"
+    "sounds/beach/",
+    "sounds/mountain/",
+    "sounds/river/",
+    "sounds/south/",
 ]
 
 random.shuffle(sounds_file)
@@ -280,9 +281,9 @@ class SoundscapeVolumeFrame(ttk.Frame):
                 )*self.app.volume).astype(numpy.int16)
             return newdata.tostring()
 
-        wf0 = wave.open(self.dir+"gastric_mod.wav", 'rb')
-        wf1 = wave.open(self.dir+"resp_mod.wav", 'rb')
-        wf2 = wave.open(self.dir+"cardiac_mod.wav", 'rb')
+        wf0 = wave.open(self.dir+"egg.wav", 'rb')
+        wf1 = wave.open(self.dir+"resp.wav", 'rb')
+        wf2 = wave.open(self.dir+"ecg.wav", 'rb')
 
         wfs = [wf0,wf1,wf2]
 
@@ -461,15 +462,18 @@ class App(tk.Tk):
             FirstFrame(self),
             VolumeFrame(self,file = "sounds/example.wav"),
             InfoFrame(self),
-            SoundFrame(self,file = sounds_file[0]+"all_mod.wav"),
+            SoundFrame(self,file = sounds_file[0]+"all.wav"),
             SoundScapeSurveyFrame(self,file = sounds_file[0]),
             SoundscapeVolumeFrame(self,dir = sounds_file[0]),
-            SoundFrame(self,file = sounds_file[1]+"all_mod.wav"),
+            SoundFrame(self,file = sounds_file[1]+"all.wav"),
             SoundScapeSurveyFrame(self,file = sounds_file[1]),
             SoundscapeVolumeFrame(self,dir = sounds_file[1]),
-            SoundFrame(self,file = sounds_file[2]+"all_mod.wav"),
+            SoundFrame(self,file = sounds_file[2]+"all.wav"),
             SoundScapeSurveyFrame(self,file = sounds_file[2]),
             SoundscapeVolumeFrame(self,dir = sounds_file[2]),
+            SoundFrame(self,file = sounds_file[3]+"all.wav"),
+            SoundScapeSurveyFrame(self,file = sounds_file[3]),
+            SoundscapeVolumeFrame(self,dir = sounds_file[3]),
             LastFrame(self)
         ]
         self.frames[0].begin()
