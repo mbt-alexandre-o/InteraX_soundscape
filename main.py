@@ -11,10 +11,10 @@ import os
 
 
 sounds_file = [
-    "sounds/beach/",
     "sounds/mountain/",
-    "sounds/river/",
-    "sounds/south/",
+    "sounds/mountain/",
+    "sounds/mountain/",
+    "sounds/mountain/",
 ]
 
 random.shuffle(sounds_file)
@@ -202,7 +202,7 @@ class FirstFrame(ttk.Frame):
 
         self.app = app
 
-        label = ttk.Label(self,anchor=tk.CENTER,text="Hello to you and thank you for participating in this test to improve the InteraX project.\nThis test consists of listening to 3 soundscapes and giving your opinion on them.")
+        label = ttk.Label(self,anchor=tk.CENTER,text="Hello to you and thank you for participating in this test to improve the InteraX project.\nThis test consists of listening to 4 soundscapes and giving your opinion on them.")
         label.place(relx = 0.2,rely=0.2,relwidth=0.6,relheight=0.6)
 
         self.next_button = ttk.Button(self,text="Next",command=self.stop)
@@ -231,13 +231,17 @@ class SoundscapeVolumeFrame(ttk.Frame):
         self.volume_2 = 0.0
         self.volume_3 = 0.0
         info = json.load(open(dir+'info.json'))
+        
+        label = ttk.Label(self,anchor=tk.CENTER,text="Select the volume of the different elements.\nYou must be able to distinctly hear all the different elements at once.")
+        label.place(relx = 0.2,rely=0.1,relwidth=0.6,relheight=0.2)
 
         self.volume_scale_1 = Eva(
             self,
             f"Please, select the volume of the {info['gastric']} in order to have a good experience.",
             "Low",
             "High",
-            to_= 1.0,
+            to_= 2.0,
+            set_= 0.0,
             command_=self.update_volume)
         self.volume_scale_1.place(relx=0.2,rely=0.3,relwidth=0.6)
 
@@ -246,7 +250,8 @@ class SoundscapeVolumeFrame(ttk.Frame):
             f"Please, select the volume of the {info['resp']} in order to have a good experience.",
             "Low",
             "High",
-            to_= 1.0,
+            to_= 2.0,
+            set_= 0.0,
             command_=self.update_volume)
         self.volume_scale_2.place(relx=0.2,rely=0.4,relwidth=0.6)
 
@@ -255,7 +260,8 @@ class SoundscapeVolumeFrame(ttk.Frame):
             f"Please, select the volume of the {info['cardiac']} in order to have a good experience.",
             "Low",
             "High",
-            to_= 1.0,
+            to_= 2.0,
+            set_= 0.0,
             command_=self.update_volume)
         self.volume_scale_3.place(relx=0.2,rely=0.5,relwidth=0.6)
 
@@ -336,7 +342,7 @@ class VolumeFrame(ttk.Frame):
             "Please, select the volume of the sound in order to have a good experience.",
             "Low",
             "High",
-            to_= 1.0,
+            to_= 0.5,
             set_= 0.0,
             command_=self.update_volume)
         self.volume_scale.place(relx=0.2,rely=0.3,relwidth=0.6)
@@ -352,7 +358,7 @@ class VolumeFrame(ttk.Frame):
         def get_data(wf,volume):
             data = wf.readframes(CHUNK)
             decodeddata = numpy.fromstring(data, numpy.int16)
-            newdata = (decodeddata*0.5*volume).astype(numpy.int16)
+            newdata = (decodeddata*0.30*volume).astype(numpy.int16)
             return newdata.tostring()
 
         wf = wave.open(self.file, 'rb')
@@ -404,8 +410,9 @@ class SoundFrame(ttk.Frame):
 
         def get_data(wf):
             data = wf.readframes(CHUNK)
-            decodeddata = numpy.fromstring(data, numpy.int16)
-            return decodeddata.tostring()
+            decodeddata = numpy.fromstring(data, numpy.int16)*self.app.volume
+            newdata = (decodeddata*1*self.app.volume).astype(numpy.int16)
+            return newdata.tostring()
 
         wf = wave.open(self.file, 'rb')
 
